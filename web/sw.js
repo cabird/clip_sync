@@ -1,9 +1,10 @@
 // Simple service worker for offline support
 const CACHE_NAME = 'clipboard-sync-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon.svg'
 ];
 
 self.addEventListener('install', event => {
