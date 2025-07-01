@@ -11,8 +11,8 @@
     <title>Clipboard Sync</title>
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -519,7 +519,7 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.12.0</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.12.1</span>
                 <span class="sync-indicator" id="syncIndicator"></span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
@@ -791,7 +791,7 @@
             </div>
             
             <div style="padding: 20px;">
-                <canvas id="qrCanvas"></canvas>
+                <div id="qrcode" style="display: flex; justify-content: center;"></div>
                 <p style="margin-top: 16px; font-size: 14px; color: #666;">
                     Scan this QR code on another device to automatically fill in the Pantry ID
                 </p>
@@ -1778,6 +1778,8 @@
             }
         }
 
+        let qrCodeInstance = null;
+        
         function showQRCode() {
             const pantryId = document.getElementById('pantryId').value.trim();
             if (!pantryId) {
@@ -1786,23 +1788,27 @@
             }
 
             const qrData = `PANTRY:${pantryId}`;
-            const canvas = document.getElementById('qrCanvas');
             
-            QRCode.toCanvas(canvas, qrData, {
-                width: 256,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            }, (error) => {
-                if (error) {
-                    console.error('QR Code generation error:', error);
-                    showToast('Failed to generate QR code');
-                } else {
-                    document.getElementById('qrCodeModal').classList.add('active');
-                }
-            });
+            // Clear any existing QR code
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            
+            try {
+                // Create new QR code
+                qrCodeInstance = new QRCode(document.getElementById('qrcode'), {
+                    text: qrData,
+                    width: 256,
+                    height: 256,
+                    colorDark: '#000000',
+                    colorLight: '#FFFFFF',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                document.getElementById('qrCodeModal').classList.add('active');
+            } catch (error) {
+                console.error('QR Code generation error:', error);
+                showToast('Failed to generate QR code');
+            }
         }
 
         function hideQRCode() {
