@@ -363,7 +363,7 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.3.0</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.4.0</span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
         </div>
@@ -507,6 +507,17 @@
         };
 
         let currentHistory = [];
+
+        // Device Detection
+        function getDeviceType() {
+            const ua = navigator.userAgent.toLowerCase();
+            const isMobile = /iphone|ipad|ipod|android|mobile/.test(ua);
+            
+            if (isMobile) {
+                return 'phone';
+            }
+            return 'laptop';
+        }
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', init);
@@ -722,7 +733,7 @@
                 const newEntry = {
                     content: content,
                     timestamp: new Date().toISOString(),
-                    device: 'phone',
+                    device: getDeviceType(),
                     id: generateId()
                 };
 
@@ -812,7 +823,7 @@
                 const latest = currentHistory[0];
                 document.getElementById('receivedContent').textContent = latest.content;
                 document.getElementById('receivedTimestamp').textContent = 
-                    `From ${latest.device} • ${formatTime(latest.timestamp)}`;
+                    `${latest.device === 'phone' ? '📱' : '💻'} ${formatTime(latest.timestamp)}`;
             }
 
             // Update history list
