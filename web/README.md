@@ -28,8 +28,39 @@ A simple PWA to sync clipboard content between devices using GitHub Gists as bac
 - No server needed - uses GitHub Gists
 - Works as a PWA (installable on phones)
 - Stores last 20 clipboard items
-- Dark mode UI optimized for mobile
+- Light theme optimized for mobile
 
 ## Deployment
 
-This app is hosted on GitHub Pages. Just visit the URL to use it.
+### Deploy with GitHub Pages
+
+1. **Push to GitHub**
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/cross-copy-paste.git
+   git push -u origin main
+   ```
+
+2. **Enable GitHub Pages**
+   - Go to your repository on GitHub
+   - Click on **Settings** (in the repository navigation)
+   - Scroll down to **Pages** section (in the left sidebar)
+   - Under **Source**, select **Deploy from a branch**
+   - Under **Branch**, select **main**
+   - Under **Folder**, select **/web** (not root!)
+   - Click **Save**
+
+3. **Access Your App**
+   - GitHub will provide a URL like: `https://YOUR_USERNAME.github.io/cross-copy-paste/`
+   - The app typically takes 2-10 minutes to become available
+   - You can check deployment status in the Actions tab
+
+4. **Install as PWA on Mobile**
+   - Visit the GitHub Pages URL on your phone
+   - iOS: Tap Share → Add to Home Screen
+   - Android: Tap menu → Add to Home Screen
+
+### Custom Domain (Optional)
+If you have a custom domain:
+1. Add a `CNAME` file in the `/web` directory with your domain
+2. Configure your domain's DNS to point to GitHub Pages
+3. Enable HTTPS in repository settings
