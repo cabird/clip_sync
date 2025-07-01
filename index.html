@@ -350,6 +350,108 @@
             border: 1px solid #f5c6cb;
         }
 
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 26px;
+            transition: .3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .3s;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Radio Buttons */
+        .radio-group {
+            margin-top: 12px;
+            padding-left: 16px;
+        }
+
+        .radio-group label {
+            display: block;
+            margin-bottom: 8px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.2s;
+        }
+
+        .radio-group label.enabled {
+            color: #333;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        .sync-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* Sync Indicator */
+        .sync-indicator {
+            display: none;
+            width: 8px;
+            height: 8px;
+            background: #2196F3;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .sync-indicator.active {
+            display: inline-block;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
         /* Loading State */
         .loading {
             text-align: center;
@@ -399,7 +501,8 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.8.0</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.9.1</span>
+                <span class="sync-indicator" id="syncIndicator"></span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
         </div>
@@ -481,7 +584,43 @@
             
             <div id="statusMessage"></div>
 
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
+            <!-- Auto-sync Settings -->
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <h3 style="font-size: 16px; margin-bottom: 16px;">Auto-sync Settings</h3>
+                
+                <div class="toggle-container">
+                    <div>
+                        <label for="autoSync" style="font-weight: 500; margin: 0;">Auto-sync clipboard</label>
+                        <div style="font-size: 12px; color: #666; margin-top: 4px;">Automatically check for new items</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoSync" onchange="toggleAutoSync()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div id="syncIntervalContainer" style="opacity: 0.5;">
+                    <label style="font-size: 14px; color: #666; margin-bottom: 8px; display: block;">Sync interval:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="syncInterval" value="15" onchange="updateSyncInterval(15)">
+                            15 seconds (fast)
+                        </label>
+                        <label>
+                            <input type="radio" name="syncInterval" value="30" checked onchange="updateSyncInterval(30)">
+                            30 seconds (default)
+                        </label>
+                        <label>
+                            <input type="radio" name="syncInterval" value="60" onchange="updateSyncInterval(60)">
+                            60 seconds (battery saver)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="sync-info" id="lastSyncInfo"></div>
+            </div>
+
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
                 <button class="btn btn-secondary" style="width: 100%; background: #dc3545; color: white;" onclick="resetSettings()">Reset All Settings</button>
             </div>
         </div>
@@ -559,10 +698,14 @@
         // App State
         let settings = {
             githubToken: '',
-            gistId: ''
+            gistId: '',
+            autoSync: false,
+            syncInterval: 30
         };
 
         let currentHistory = [];
+        let syncIntervalId = null;
+        let lastSyncTime = null;
 
         // Device Detection
         function getDeviceType() {
@@ -585,6 +728,10 @@
                 hideLoading();
             } else {
                 loadHistory();
+                // Initialize auto-sync if enabled
+                if (settings.autoSync) {
+                    startAutoSync();
+                }
             }
 
             // PWA Install Handler with update detection
@@ -626,7 +773,13 @@
             // Auto-refresh on focus
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden && settings.githubToken) {
-                    loadHistory();
+                    if (settings.autoSync) {
+                        // If auto-sync is enabled, just update the last sync time
+                        updateLastSyncTime();
+                    } else {
+                        // Otherwise, do a manual refresh
+                        loadHistory();
+                    }
                 }
             });
         }
@@ -635,8 +788,12 @@
         function loadSettings() {
             const saved = localStorage.getItem('clipboardSyncSettings');
             if (saved) {
-                settings = JSON.parse(saved);
+                const loadedSettings = JSON.parse(saved);
+                // Merge with defaults to ensure new properties exist
+                settings = { ...settings, ...loadedSettings };
             }
+            // Update UI to reflect settings
+            updateAutoSyncUI();
         }
 
         function saveSettings() {
@@ -754,24 +911,44 @@
 
         async function loadHistory() {
             try {
-                const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
+                console.log(`[Load] Attempting to load history from gist: ${settings.gistId}`);
+                
+                if (!settings.gistId) {
+                    throw new Error('No gist ID configured');
+                }
+                
+                const response = await fetch(`https://api.github.com/gists/${settings.gistId}?t=${Date.now()}`, {
                     headers: {
                         'Authorization': `token ${settings.githubToken}`
                     }
                 });
 
-                if (!response.ok) throw new Error('Failed to load history');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
 
                 const gist = await response.json();
                 const content = JSON.parse(gist.files['clipboard-history.json'].content);
                 currentHistory = content.history || [];
 
+                console.log(`[Load] Successfully loaded ${currentHistory.length} items`);
                 updateUI();
                 hideLoading();
             } catch (error) {
-                console.error('Error loading history:', error);
+                console.error('[Load] Error loading history:', error.message);
+                console.error('[Load] Full error:', error);
                 hideLoading();
-                showToast('Failed to load history');
+                
+                // More specific error messages
+                if (error.message.includes('Failed to fetch')) {
+                    showToast('Network error - check your connection');
+                } else if (error.message.includes('401')) {
+                    showToast('Invalid token - check settings');
+                } else if (error.message.includes('404')) {
+                    showToast('Gist not found - check settings');
+                } else {
+                    showToast('Failed to load history');
+                }
             }
         }
 
@@ -785,6 +962,20 @@
             }
 
             try {
+                // First, fetch the latest history to avoid conflicts
+                console.log('[Send] Fetching latest history before sending...');
+                const getResponse = await fetch(`https://api.github.com/gists/${settings.gistId}?t=${Date.now()}`, {
+                    headers: {
+                        'Authorization': `token ${settings.githubToken}`
+                    }
+                });
+
+                if (getResponse.ok) {
+                    const gist = await getResponse.json();
+                    const latestContent = JSON.parse(gist.files['clipboard-history.json'].content);
+                    currentHistory = latestContent.history || [];
+                }
+
                 // Add to history
                 const newEntry = {
                     content: content,
@@ -796,9 +987,11 @@
 
                 currentHistory.unshift(newEntry);
                 
-                // Keep only last 20 items
-                if (currentHistory.length > 20) {
-                    currentHistory = currentHistory.slice(0, 20);
+                // Keep only last 20 items (preserve pinned items)
+                const pinned = currentHistory.filter(item => item.pinned);
+                const unpinned = currentHistory.filter(item => !item.pinned);
+                if (unpinned.length > 20) {
+                    currentHistory = [...pinned, ...unpinned.slice(0, 20 - pinned.length)];
                 }
 
                 // Update gist
@@ -930,6 +1123,7 @@
             document.getElementById('settingsModal').classList.add('active');
             document.getElementById('githubToken').value = settings.githubToken || '';
             document.getElementById('gistId').value = settings.gistId || '';
+            updateAutoSyncUI();
         }
 
         function hideSettings() {
@@ -1043,6 +1237,160 @@
                 // Revert the change
                 item.pinned = !item.pinned;
             }
+        }
+
+        // Auto-sync Functions
+        function toggleAutoSync() {
+            const checkbox = document.getElementById('autoSync');
+            settings.autoSync = checkbox.checked;
+            localStorage.setItem('clipboardSyncSettings', JSON.stringify(settings));
+            
+            if (settings.autoSync) {
+                startAutoSync();
+                showToast('Auto-sync enabled');
+            } else {
+                stopAutoSync();
+                showToast('Auto-sync disabled');
+            }
+            
+            updateAutoSyncUI();
+        }
+
+        function updateSyncInterval(interval) {
+            settings.syncInterval = interval;
+            localStorage.setItem('clipboardSyncSettings', JSON.stringify(settings));
+            
+            if (settings.autoSync) {
+                // Restart auto-sync with new interval
+                stopAutoSync();
+                startAutoSync();
+                showToast(`Sync interval updated to ${interval} seconds`);
+            }
+        }
+
+        function startAutoSync() {
+            if (syncIntervalId) {
+                clearInterval(syncIntervalId);
+            }
+            
+            console.log(`[Auto-sync] Starting auto-sync with ${settings.syncInterval}s interval`);
+            
+            // Show sync indicator
+            document.getElementById('syncIndicator').classList.add('active');
+            
+            // Set up interval
+            syncIntervalId = setInterval(() => {
+                if (!document.hidden) {
+                    silentLoadHistory();
+                } else {
+                    console.log('[Auto-sync] Tab hidden, skipping sync');
+                }
+            }, settings.syncInterval * 1000);
+            
+            // Update last sync time
+            updateLastSyncTime();
+        }
+
+        function stopAutoSync() {
+            if (syncIntervalId) {
+                console.log('[Auto-sync] Stopping auto-sync');
+                clearInterval(syncIntervalId);
+                syncIntervalId = null;
+            }
+            
+            // Hide sync indicator
+            document.getElementById('syncIndicator').classList.remove('active');
+        }
+
+        async function silentLoadHistory() {
+            console.log(`[Auto-sync] Attempting sync at ${new Date().toLocaleTimeString()}`);
+            try {
+                const response = await fetch(`https://api.github.com/gists/${settings.gistId}?t=${Date.now()}`, {
+                    headers: {
+                        'Authorization': `token ${settings.githubToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error(`[Auto-sync] Failed with status: ${response.status}`);
+                    return;
+                }
+
+                const gist = await response.json();
+                const content = JSON.parse(gist.files['clipboard-history.json'].content);
+                const newHistory = content.history || [];
+                
+                // Check if there are new items
+                const oldLength = currentHistory.length;
+                const oldLatest = currentHistory[0]?.content;
+                
+                currentHistory = newHistory;
+                
+                // If there are new items, show a toast and update UI
+                if (newHistory.length > oldLength || (newHistory[0] && newHistory[0].content !== oldLatest)) {
+                    console.log(`[Auto-sync] New item detected! Total items: ${newHistory.length}`);
+                    showToast('New clipboard item received!');
+                    updateUI();
+                } else {
+                    console.log(`[Auto-sync] No new items. Current count: ${currentHistory.length}`);
+                }
+                
+                updateLastSyncTime();
+            } catch (error) {
+                console.error('[Auto-sync] Error during sync:', error);
+            }
+        }
+
+        function updateAutoSyncUI() {
+            const checkbox = document.getElementById('autoSync');
+            const intervalContainer = document.getElementById('syncIntervalContainer');
+            const radioButtons = document.querySelectorAll('input[name="syncInterval"]');
+            
+            if (checkbox) {
+                checkbox.checked = settings.autoSync;
+            }
+            
+            if (intervalContainer) {
+                intervalContainer.style.opacity = settings.autoSync ? '1' : '0.5';
+                
+                // Enable/disable radio buttons
+                radioButtons.forEach(radio => {
+                    radio.disabled = !settings.autoSync;
+                    if (radio.value == settings.syncInterval) {
+                        radio.checked = true;
+                    }
+                    
+                    // Update label styling
+                    const label = radio.parentElement;
+                    if (settings.autoSync) {
+                        label.classList.add('enabled');
+                    } else {
+                        label.classList.remove('enabled');
+                    }
+                });
+            }
+            
+            updateLastSyncTime();
+        }
+
+        function updateLastSyncTime() {
+            lastSyncTime = new Date();
+            const infoEl = document.getElementById('lastSyncInfo');
+            if (infoEl && settings.autoSync) {
+                infoEl.textContent = `Last synced: ${formatSyncTime(lastSyncTime)}`;
+            } else if (infoEl) {
+                infoEl.textContent = '';
+            }
+        }
+
+        function formatSyncTime(date) {
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+            
+            if (diff < 10) return 'just now';
+            if (diff < 60) return `${diff} seconds ago`;
+            if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+            return `${Math.floor(diff / 3600)} hours ago`;
         }
 
         function generateId() {
