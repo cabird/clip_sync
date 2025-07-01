@@ -13,7 +13,7 @@ Version numbering scheme:
 - **Minor** (1.X.0) - New features, significant improvements
 - **Major** (X.0.0) - Breaking changes, major refactors
 
-Current version: **v1.8.0**
+Current version: **v1.10.0**
 
 ## Project Structure
 
@@ -90,12 +90,18 @@ Users may need to:
 - Clear browser cache
 The version number helps identify cache issues.
 
+## Recent Features Added (v1.9.0 - v1.10.0)
+- ✅ Auto-sync with customizable intervals (15s/30s/60s)
+- ✅ Visual sync indicator in header
+- ✅ Delete button for removing sensitive items
+- ✅ Cache-busting for faster updates
+
 ## Future Enhancements Discussed
 - Windows system tray app (Electron)
-- Auto-sync without manual refresh
 - Encryption options
 - Multiple clipboard support
 - Search functionality for history
+- Smart URL/email/phone detection
 
 ## Remember
 - This is a simple, user-friendly tool

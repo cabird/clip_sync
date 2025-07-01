@@ -16,7 +16,8 @@ Clip Sync lets you easily copy text on one device and paste it on another. Wheth
 - 📌 **Pin Important Items** - Keep frequently used text at the top
 - 👁️ **View Full Content** - See complete text with formatting preserved
 - 📅 **History** - Stores your last 20 clipboard items
-- 🔄 **Auto-Refresh** - Updates when you switch between devices
+- 🔄 **Auto-Sync** - Automatically checks for new items at customizable intervals
+- 🗑️ **Delete Items** - Remove sensitive information from your history
 - 💻 **Device Detection** - Shows whether text came from phone (📱) or computer (💻)
 - ⚡ **Works Offline** - View your clipboard history even without internet
 
@@ -106,7 +107,14 @@ Firefox doesn't support PWA installation, but you can:
 - **Pin Items**: Click the star (☆) to pin important items to the top
 - **View Full**: Click "View" to see the complete text with formatting
 - **History**: See your last 20 clipboard items
-- **Refresh**: Click refresh to check for new items
+- **Auto-Sync**: Enable automatic syncing in settings
+  - Choose between 15s (fast), 30s (default), or 60s (battery saver)
+  - See a blue pulsing indicator when auto-sync is active
+  - View the last sync time in settings
+- **Delete Items**: Click the red "Delete" button to remove sensitive items
+  - Confirmation dialog shows first 50 characters
+  - Permanently removes from all devices
+- **Manual Refresh**: Click refresh to immediately check for new items
 
 ## Privacy & Security
 
@@ -121,13 +129,17 @@ Firefox doesn't support PWA installation, but you can:
 - Save your GitHub token in a password manager
 - The app works best when installed as a PWA (see installation guides above)
 - Pinned items (⭐) stay at the top of your history
-- The app auto-refreshes when you switch to it
+- Enable auto-sync for hands-free operation - new items appear automatically
+- Use the delete button to remove sensitive information you don't want to keep
+- Set auto-sync to 60 seconds on mobile devices to save battery
 
 ## Troubleshooting
 
 **Can't see new items?**
-- Click the Refresh button
+- If auto-sync is off, click the Refresh button
+- Enable auto-sync in settings for automatic updates
 - Make sure you're using the same GitHub token on all devices
+- Note: GitHub may cache data for 5-60 seconds
 
 **Installation issues?**
 - Clear your browser cache
