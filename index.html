@@ -519,7 +519,7 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.12.1</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.12.2</span>
                 <span class="sync-indicator" id="syncIndicator"></span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
@@ -1837,6 +1837,10 @@
                 
                 scanStatus.textContent = 'Starting camera...';
                 
+                // Configure scanner with hints for better performance
+                const hints = new Map();
+                hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+                
                 // Start scanning
                 qrCodeScanner.decodeFromVideoDevice(selectedDeviceId, video, (result, error) => {
                     if (result) {
@@ -1855,10 +1859,19 @@
                         }
                     }
                     
+                    // Suppress common scanning errors - these are normal during continuous scanning
                     if (error && !(error instanceof ZXing.NotFoundException)) {
-                        console.error('QR scan error:', error);
+                        // Only log truly unexpected errors
+                        const errorMessage = error.message || error.toString();
+                        if (!errorMessage.includes('correctErrors') && 
+                            !errorMessage.includes('ChecksumException') &&
+                            !errorMessage.includes('Reed Solomon') &&
+                            !errorMessage.includes('decode') &&
+                            errorMessage !== 'l') {
+                            console.warn('Unexpected QR scan error:', errorMessage);
+                        }
                     }
-                });
+                }, hints);
                 
                 scanStatus.textContent = 'Point your camera at the QR code';
                 
