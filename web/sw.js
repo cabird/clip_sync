@@ -1,5 +1,5 @@
 // Simple service worker for offline support
-const CACHE_NAME = 'clipboard-sync-v1.2.1';
+const CACHE_NAME = 'clipboard-sync-v1.2.2';
 const urlsToCache = [
   './',
   './index.html',
