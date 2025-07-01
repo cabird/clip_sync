@@ -517,7 +517,7 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.11.4</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.11.5</span>
                 <span class="sync-indicator" id="syncIndicator"></span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
@@ -660,7 +660,10 @@
             </div>
 
             <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                <button class="btn btn-secondary" style="width: 100%; background: #dc3545; color: white;" onclick="resetSettings()">Reset All Settings</button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="hideSettings()">Save & Close</button>
+                    <button class="btn btn-secondary" style="flex: 1; background: #dc3545; color: white;" onclick="resetSettings()">Reset All Settings</button>
+                </div>
             </div>
         </div>
     </div>
@@ -746,7 +749,9 @@
                 <ol style="padding-left: 20px;">
                     <li>Go to <a href="https://getpantry.cloud" target="_blank" style="color: #2196F3;">getpantry.cloud</a></li>
                     <li>Enter your email address</li>
+                    <li>Choose a Pantry name (anything works - we'll create a basket called "clip_sync" inside it)</li>
                     <li>You'll receive a Pantry ID (looks like: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">38e21368-5577-4a1e-b0ba-6ce2077136e1</code>)</li>
+                    <li><strong>Important:</strong> Save this ID somewhere safe (password manager, notes, etc.)</li>
                     <li>Copy and paste that ID here</li>
                     <li>Use the same ID on all your devices</li>
                 </ol>
