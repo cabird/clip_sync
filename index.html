@@ -11,6 +11,8 @@
     <title>Clipboard Sync</title>
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -517,7 +519,7 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.11.6</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.12.0</span>
                 <span class="sync-indicator" id="syncIndicator"></span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
@@ -613,7 +615,13 @@
                         <circle cx="12" cy="17" r="1" fill="white"/>
                     </svg>
                 </label>
-                <input type="text" id="pantryId" placeholder="e.g., 38e21368-5577-4a1e-b0ba-6ce2077136e1">
+                <div style="position: relative;">
+                    <input type="text" id="pantryId" placeholder="e.g., 38e21368-5577-4a1e-b0ba-6ce2077136e1" style="padding-right: 80px;">
+                    <div style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px;">
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="scanQRCode()" title="Scan QR Code">📷</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="showQRCode()" id="showQRButton" title="Share QR Code" disabled>🔗</button>
+                    </div>
+                </div>
                 <small style="display: block; margin-top: 4px; color: #666; font-size: 12px;">
                     Get your Pantry ID from <a href="https://getpantry.cloud" target="_blank" style="color: #2196F3;">getpantry.cloud</a>
                 </small>
@@ -774,6 +782,40 @@
         </div>
     </div>
 
+    <!-- QR Code Modal -->
+    <div class="modal" id="qrCodeModal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h2>Share Pantry ID</h2>
+                <button class="close-btn" onclick="hideQRCode()">×</button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <canvas id="qrCanvas"></canvas>
+                <p style="margin-top: 16px; font-size: 14px; color: #666;">
+                    Scan this QR code on another device to automatically fill in the Pantry ID
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div class="modal" id="qrScannerModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Scan QR Code</h2>
+                <button class="close-btn" onclick="stopQRScanner()">×</button>
+            </div>
+            
+            <div style="padding: 20px; text-align: center;">
+                <video id="qrVideo" style="width: 100%; max-width: 400px; border-radius: 8px;"></video>
+                <p style="margin-top: 16px; font-size: 14px; color: #666;" id="scanStatus">
+                    Point your camera at the QR code
+                </p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // App State
         let settings = {
@@ -789,6 +831,7 @@
         let syncIntervalId = null;
         let lastSyncTime = null;
         let currentBackend = null;
+        let qrCodeScanner = null;
 
         // Device Detection
         function getDeviceType() {
@@ -1417,6 +1460,7 @@
             document.getElementById('pantryId').value = settings.pantryId || '';
             onBackendChange();
             updateAutoSyncUI();
+            updateQRShareButton();
         }
 
         function hideSettings() {
@@ -1724,6 +1768,116 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // QR Code Functions
+        function updateQRShareButton() {
+            const pantryId = document.getElementById('pantryId').value.trim();
+            const showQRButton = document.getElementById('showQRButton');
+            if (showQRButton) {
+                showQRButton.disabled = !pantryId;
+            }
+        }
+
+        function showQRCode() {
+            const pantryId = document.getElementById('pantryId').value.trim();
+            if (!pantryId) {
+                showToast('Please enter a Pantry ID first');
+                return;
+            }
+
+            const qrData = `PANTRY:${pantryId}`;
+            const canvas = document.getElementById('qrCanvas');
+            
+            QRCode.toCanvas(canvas, qrData, {
+                width: 256,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            }, (error) => {
+                if (error) {
+                    console.error('QR Code generation error:', error);
+                    showToast('Failed to generate QR code');
+                } else {
+                    document.getElementById('qrCodeModal').classList.add('active');
+                }
+            });
+        }
+
+        function hideQRCode() {
+            document.getElementById('qrCodeModal').classList.remove('active');
+        }
+
+        async function scanQRCode() {
+            try {
+                const modal = document.getElementById('qrScannerModal');
+                modal.classList.add('active');
+                
+                const video = document.getElementById('qrVideo');
+                const scanStatus = document.getElementById('scanStatus');
+                
+                // Create QR code scanner
+                qrCodeScanner = new ZXing.BrowserQRCodeReader();
+                
+                // Get available cameras
+                const videoInputDevices = await qrCodeScanner.listVideoInputDevices();
+                if (videoInputDevices.length === 0) {
+                    throw new Error('No camera found');
+                }
+                
+                // Use the first available camera (usually back camera on mobile)
+                const selectedDeviceId = videoInputDevices[0].deviceId;
+                
+                scanStatus.textContent = 'Starting camera...';
+                
+                // Start scanning
+                qrCodeScanner.decodeFromVideoDevice(selectedDeviceId, video, (result, error) => {
+                    if (result) {
+                        const text = result.getText();
+                        console.log('QR Code scanned:', text);
+                        
+                        // Parse the QR code
+                        if (text.startsWith('PANTRY:')) {
+                            const pantryId = text.substring(7);
+                            document.getElementById('pantryId').value = pantryId;
+                            updateQRShareButton();
+                            showToast('Pantry ID scanned successfully!');
+                            stopQRScanner();
+                        } else {
+                            scanStatus.textContent = 'Invalid QR code - please scan a Pantry ID QR code';
+                        }
+                    }
+                    
+                    if (error && !(error instanceof ZXing.NotFoundException)) {
+                        console.error('QR scan error:', error);
+                    }
+                });
+                
+                scanStatus.textContent = 'Point your camera at the QR code';
+                
+            } catch (error) {
+                console.error('Failed to start QR scanner:', error);
+                showToast('Failed to start camera: ' + error.message);
+                stopQRScanner();
+            }
+        }
+
+        function stopQRScanner() {
+            if (qrCodeScanner) {
+                qrCodeScanner.reset();
+                qrCodeScanner = null;
+            }
+            document.getElementById('qrScannerModal').classList.remove('active');
+        }
+
+        // Add event listener for pantry ID input
+        document.addEventListener('DOMContentLoaded', function() {
+            const pantryIdInput = document.getElementById('pantryId');
+            if (pantryIdInput) {
+                pantryIdInput.addEventListener('input', updateQRShareButton);
+            }
+        });
     </script>
 </body>
 </html>
