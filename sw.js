@@ -1,5 +1,5 @@
 // Service worker with better update handling
-const CACHE_NAME = 'clipboard-sync-v1.11.5';
+const CACHE_NAME = 'clipboard-sync-v1.11.6';
 const urlsToCache = [
   './',
   './index.html',
