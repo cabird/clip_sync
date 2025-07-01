@@ -398,7 +398,7 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.6.0</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.6.1</span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
         </div>
@@ -898,7 +898,7 @@
                 div.className = 'history-item';
                 div.innerHTML = `
                     <button class="pin-btn ${item.pinned ? 'pinned' : ''}" onclick="togglePin('${item.id}')" title="${item.pinned ? 'Unpin' : 'Pin'}">
-                        ${item.pinned ? '⭐' : '☆'}
+                        ${item.pinned ? '★' : '☆'}
                     </button>
                     <span class="device-icon">${item.device === 'phone' ? '📱' : '💻'}</span>
                     <div class="history-content">
