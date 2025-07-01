@@ -1,5 +1,5 @@
 // Service worker with better update handling
-const CACHE_NAME = 'clipboard-sync-v1.11.2';
+const CACHE_NAME = 'clipboard-sync-v1.11.3';
 const urlsToCache = [
   './',
   './index.html',
@@ -32,6 +32,12 @@ self.addEventListener('activate', event => {
 
 // Fetch event - network first, fallback to cache
 self.addEventListener('fetch', event => {
+  // Only cache GET requests
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
   event.respondWith(
     fetch(event.request)
       .then(response => {
