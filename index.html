@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ClipSync">
     <meta name="theme-color" content="#ffffff">
@@ -516,7 +517,7 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.11.3</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.11.4</span>
                 <span class="sync-indicator" id="syncIndicator"></span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
@@ -879,6 +880,11 @@
 
         // Pantry Backend Implementation
         class PantryBackend extends BaseBackend {
+            constructor() {
+                super();
+                this.basketVerified = false;
+            }
+
             async testConnection() {
                 try {
                     // Get pantry details to verify it exists
@@ -891,48 +897,73 @@
             }
 
             async ensureBasketExists() {
-                // First, check if the basket exists by getting pantry details
-                const detailsResponse = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}`);
-                
-                if (!detailsResponse.ok) {
-                    throw new Error(`Invalid Pantry ID: ${detailsResponse.status}`);
+                // Only check once per session
+                if (this.basketVerified) {
+                    return true;
                 }
-                
-                const pantryDetails = await detailsResponse.json();
-                const basketExists = pantryDetails.baskets.some(basket => basket.name === 'clip_sync');
-                
-                if (!basketExists) {
-                    console.log('[Pantry] Basket "clip_sync" does not exist, creating it...');
-                    // Create the basket with empty history
-                    const createResponse = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}/basket/clip_sync`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ history: [] })
-                    });
+
+                try {
+                    // First, check if the basket exists by getting pantry details
+                    const detailsResponse = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}`);
                     
-                    if (!createResponse.ok) {
-                        throw new Error(`Failed to create basket: ${createResponse.status}`);
+                    if (!detailsResponse.ok) {
+                        throw new Error(`Invalid Pantry ID: ${detailsResponse.status}`);
                     }
-                    console.log('[Pantry] Basket created successfully');
+                    
+                    const pantryDetails = await detailsResponse.json();
+                    const basketExists = pantryDetails.baskets.some(basket => basket.name === 'clip_sync');
+                    
+                    if (!basketExists) {
+                        console.log('[Pantry] Basket "clip_sync" does not exist, creating it...');
+                        // Create the basket with empty history
+                        const createResponse = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}/basket/clip_sync`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ history: [] })
+                        });
+                        
+                        if (!createResponse.ok) {
+                            throw new Error(`Failed to create basket: ${createResponse.status}`);
+                        }
+                        console.log('[Pantry] Basket created successfully');
+                    }
+                    
+                    this.basketVerified = true;
+                    return true;
+                } catch (error) {
+                    // If we get a CORS error, assume basket exists and continue
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        console.log('[Pantry] CORS error checking basket, assuming it exists');
+                        this.basketVerified = true;
+                        return true;
+                    }
+                    throw error;
                 }
-                
-                return basketExists;
             }
 
             async loadHistory() {
                 // Ensure basket exists before trying to load
                 await this.ensureBasketExists();
                 
-                const response = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}/basket/clip_sync`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+                try {
+                    const response = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}/basket/clip_sync`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
 
-                const data = await response.json();
-                return data.history || [];
+                    const data = await response.json();
+                    return data.history || [];
+                } catch (error) {
+                    // If CORS error, return current history (don't throw)
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        console.log('[Pantry] CORS error loading history, returning current data');
+                        return currentHistory || [];
+                    }
+                    throw error;
+                }
             }
 
             async saveHistory(history) {
