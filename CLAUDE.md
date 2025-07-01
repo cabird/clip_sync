@@ -5,41 +5,40 @@
 **ALWAYS increment the version number when making ANY commits to the web app.**
 
 Version number locations to update:
-1. `/web/index.html` - Line ~366 in the header span
-2. `/web/sw.js` - Line 2 in CACHE_NAME constant
+1. `/index.html` - Line ~402 in the header span
+2. `/sw.js` - Line 2 in CACHE_NAME constant
 
 Version numbering scheme:
 - **Patch** (1.0.X) - Bug fixes, style changes, minor updates
 - **Minor** (1.X.0) - New features, significant improvements
 - **Major** (X.0.0) - Breaking changes, major refactors
 
-Current version: **v1.6.2**
+Current version: **v1.7.0**
 
 ## Project Structure
 
 ```
 cross-copy-paste/
-├── web/                    # PWA (Progressive Web App)
-│   ├── index.html         # Main app - single file contains all code
-│   ├── manifest.json      # PWA manifest
-│   ├── sw.js             # Service worker for offline support
-│   ├── icon.svg          # App icon (SVG)
-│   ├── apple-touch-icon.png  # iOS home screen icon
-│   └── README.md         # Deployment instructions
-├── index.html            # Root redirect to /web/
-└── windows/              # (Future) Windows tray app
+├── index.html              # Main app - single file contains all code
+├── manifest.json           # PWA manifest  
+├── sw.js                   # Service worker for offline support
+├── icon.svg                # App icon (SVG)
+├── apple-touch-icon.png    # iOS home screen icon
+├── README-app.md           # App deployment instructions
+├── CLAUDE.md               # This file - project instructions
+└── .gitignore             # Git ignore file
 ```
 
 ## Key Information
 
 ### GitHub Pages Deployment
-- Hosted at: https://www.cabird.com/cross-copy-paste/web/
+- Hosted at: https://www.cabird.com/cross-copy-paste/
 - Deployed from main branch, root directory
-- Uses redirect from root to /web/ subdirectory
+- All app files now in root (no subdirectory)
 
 ### PWA Considerations
-- The app is served from a subdirectory, not root
-- Manifest uses absolute paths: `/cross-copy-paste/web/`
+- The app is served from the repository root
+- Manifest uses absolute paths: `/cross-copy-paste/`
 - Service worker uses relative paths for caching
 - Both iOS and Windows PWA installations tested
 
