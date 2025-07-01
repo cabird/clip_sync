@@ -13,7 +13,7 @@ Version numbering scheme:
 - **Minor** (1.X.0) - New features, significant improvements
 - **Major** (X.0.0) - Breaking changes, major refactors
 
-Current version: **v1.2.3**
+Current version: **v1.3.0**
 
 ## Project Structure
 
