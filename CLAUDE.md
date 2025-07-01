@@ -1,4 +1,4 @@
-# Cross-Copy-Paste Project Instructions
+# Clip Sync Project Instructions
 
 ## IMPORTANT: Version Updates
 
@@ -13,12 +13,12 @@ Version numbering scheme:
 - **Minor** (1.X.0) - New features, significant improvements
 - **Major** (X.0.0) - Breaking changes, major refactors
 
-Current version: **v1.7.0**
+Current version: **v1.7.1**
 
 ## Project Structure
 
 ```
-cross-copy-paste/
+clip_sync/
 ├── index.html              # Main app - single file contains all code
 ├── manifest.json           # PWA manifest  
 ├── sw.js                   # Service worker for offline support
@@ -32,13 +32,13 @@ cross-copy-paste/
 ## Key Information
 
 ### GitHub Pages Deployment
-- Hosted at: https://www.cabird.com/cross-copy-paste/
+- Hosted at: https://www.cabird.com/clip_sync/
 - Deployed from main branch, root directory
 - All app files now in root (no subdirectory)
 
 ### PWA Considerations
 - The app is served from the repository root
-- Manifest uses absolute paths: `/cross-copy-paste/`
+- Manifest uses absolute paths: `/clip_sync/`
 - Service worker uses relative paths for caching
 - Both iOS and Windows PWA installations tested
 

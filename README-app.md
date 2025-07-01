@@ -36,7 +36,7 @@ A simple PWA to sync clipboard content between devices using GitHub Gists as bac
 
 1. **Push to GitHub**
    ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/cross-copy-paste.git
+   git remote add origin https://github.com/YOUR_USERNAME/clip_sync.git
    git push -u origin main
    ```
 
@@ -46,11 +46,11 @@ A simple PWA to sync clipboard content between devices using GitHub Gists as bac
    - Scroll down to **Pages** section (in the left sidebar)
    - Under **Source**, select **Deploy from a branch**
    - Under **Branch**, select **main**
-   - Under **Folder**, select **/web** (not root!)
+   - Under **Folder**, select **/ (root)**
    - Click **Save**
 
 3. **Access Your App**
-   - GitHub will provide a URL like: `https://YOUR_USERNAME.github.io/cross-copy-paste/`
+   - GitHub will provide a URL like: `https://YOUR_USERNAME.github.io/clip_sync/`
    - The app typically takes 2-10 minutes to become available
    - You can check deployment status in the Actions tab
 
@@ -61,6 +61,6 @@ A simple PWA to sync clipboard content between devices using GitHub Gists as bac
 
 ### Custom Domain (Optional)
 If you have a custom domain:
-1. Add a `CNAME` file in the `/web` directory with your domain
+1. Add a `CNAME` file in the root directory with your domain
 2. Configure your domain's DNS to point to GitHub Pages
 3. Enable HTTPS in repository settings
