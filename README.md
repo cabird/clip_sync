@@ -4,6 +4,8 @@ A simple, secure clipboard syncing tool that works across all your devices - no 
 
 **Try it now:** [https://www.cabird.com/clip_sync](https://www.cabird.com/clip_sync)
 
+![Clip Sync Main Interface](clip_sync_main.png)
+
 ## What is Clip Sync?
 
 Clip Sync lets you easily copy text on one device and paste it on another. Whether you're moving text from your phone to your laptop or vice versa, Clip Sync makes it seamless.
@@ -39,6 +41,8 @@ Clip Sync now supports two storage backends:
 - Completely free
 
 ## Getting Started
+
+![Clip Sync Settings](clip_sync_settings.png)
 
 ### Option 1: Pantry Cloud (Recommended - Easier!)
 
