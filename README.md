@@ -2,6 +2,8 @@
 
 A simple, secure clipboard syncing tool that works across all your devices - no server required!
 
+**🔒 Your data stays private:** Everything runs in your browser and syncs to YOUR personal storage (Pantry Cloud or GitHub Gist). No one else can see your clipboard data - not even us!
+
 **Try it now:** [https://www.cabird.com/clip_sync](https://www.cabird.com/clip_sync)
 
 ![Clip Sync Main Interface](clip_sync_main.png)
