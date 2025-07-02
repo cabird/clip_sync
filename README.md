@@ -11,7 +11,7 @@ Clip Sync lets you easily copy text on one device and paste it on another. Wheth
 ### Key Features
 
 - 📱 **Cross-Platform** - Works on iPhone, Android, Windows, Mac, and Linux
-- 🔒 **Secure** - Uses your private GitHub Gist (only you can see your data)
+- 🔒 **Secure** - Your data is private (stored in Pantry Cloud or GitHub)
 - 🚀 **No Server Needed** - Runs entirely in your browser
 - 📌 **Pin Important Items** - Keep frequently used text at the top
 - 👁️ **View Full Content** - See complete text with formatting preserved
@@ -20,18 +20,46 @@ Clip Sync lets you easily copy text on one device and paste it on another. Wheth
 - 🗑️ **Delete Items** - Remove sensitive information from your history
 - 💻 **Device Detection** - Shows whether text came from phone (📱) or computer (💻)
 - ⚡ **Works Offline** - View your clipboard history even without internet
+- 🔗 **QR Code Sharing** - Easy device pairing with QR codes (Pantry mode)
 
 ## How It Works
 
-Clip Sync uses GitHub Gists as a backend to store your clipboard data. This means:
-- Your data is stored in your own GitHub account
-- Only you can access it (with your personal access token)
-- No third-party servers involved
-- Completely free (GitHub Gists are free)
+Clip Sync now supports two storage backends:
+
+### 1. Pantry Cloud (Default - Easier!)
+- No GitHub account needed
+- Just need an email to get started
+- Share your Pantry ID between devices using QR codes
+- Free with generous limits
+
+### 2. GitHub Gist (Original)
+- Uses your own GitHub account
+- Requires a Personal Access Token
+- Data stored in a private Gist
+- Completely free
 
 ## Getting Started
 
-### 1. Get a GitHub Personal Access Token
+### Option 1: Pantry Cloud (Recommended - Easier!)
+
+**First Device Setup:**
+1. Visit [https://www.cabird.com/clip_sync](https://www.cabird.com/clip_sync)
+2. The app will default to Pantry Cloud storage
+3. Click the settings icon (⚙️)
+4. Click the help icon next to "Pantry ID" for instructions
+5. Go to [https://getpantry.cloud](https://getpantry.cloud) and enter your email
+6. Name your pantry (anything works - like "my-clipboard" or just your name)
+7. Copy the Pantry ID you receive (looks like: 12a34567-8901-2345-b678-9ce0123456e7)
+8. **Important:** Save this ID somewhere safe (password manager, notes, etc.) - you only need to get it once!
+9. Paste it in Clip Sync and click "Save & Connect"
+
+**Adding Other Devices:**
+- **Easy way:** In settings, click "Share as QR Code" and scan it from the app on your other device
+- **Manual way:** Enter the same Pantry ID on each device
+
+### Option 2: GitHub Gist (Original Method)
+
+#### 1. Get a GitHub Personal Access Token
 
 1. Sign in to [GitHub.com](https://github.com)
 2. Click your profile picture → **Settings**
@@ -44,15 +72,16 @@ Clip Sync uses GitHub Gists as a backend to store your clipboard data. This mean
 9. Click **Generate token**
 10. **Copy the token immediately!** (You won't see it again)
 
-### 2. Set Up Clip Sync
+#### 2. Set Up Clip Sync with GitHub
 
 1. Visit [https://www.cabird.com/clip_sync](https://www.cabird.com/clip_sync)
 2. Click the settings icon (⚙️)
-3. Paste your GitHub token
-4. Click "Save & Connect"
-5. The app will create a private gist automatically
+3. Change "Storage Backend" to "GitHub Gist"
+4. Paste your GitHub token
+5. Click "Save & Connect"
+6. The app will create a private gist automatically
 
-### 3. Use the Same Token on All Devices
+#### 3. Use the Same Token on All Devices
 
 To sync between devices, simply enter the same GitHub token on each device. The app will automatically find your clipboard gist.
 
@@ -115,9 +144,19 @@ Firefox doesn't support PWA installation, but you can:
   - Confirmation dialog shows first 50 characters
   - Permanently removes from all devices
 - **Manual Refresh**: Click refresh to immediately check for new items
+- **QR Code Sharing** (Pantry mode only):
+  - Generate QR code to share your Pantry ID
+  - Scan QR code to quickly set up on new devices
 
 ## Privacy & Security
 
+### Pantry Cloud Storage
+- Your data is accessible only with your unique Pantry ID
+- The Pantry ID is stored locally on your device
+- Data is stored in Pantry's cloud infrastructure
+- You control who has access by sharing (or not sharing) your Pantry ID
+
+### GitHub Gist Storage
 - Your clipboard data is stored in a private GitHub Gist
 - Only accessible with your personal access token
 - The token is stored locally on your device (never sent anywhere else)
@@ -126,7 +165,11 @@ Firefox doesn't support PWA installation, but you can:
 
 ## Tips
 
-- Save your GitHub token in a password manager
+- **For Pantry users**: 
+  - You only need to get your Pantry ID once from getpantry.cloud
+  - Save it somewhere safe (notes, password manager) in case your browser storage is cleared
+  - Use the QR code feature to quickly add new devices - no typing needed!
+- **For GitHub users**: Save your GitHub token in a password manager
 - The app works best when installed as a PWA (see installation guides above)
 - Pinned items (⭐) stay at the top of your history
 - Enable auto-sync for hands-free operation - new items appear automatically
@@ -138,15 +181,21 @@ Firefox doesn't support PWA installation, but you can:
 **Can't see new items?**
 - If auto-sync is off, click the Refresh button
 - Enable auto-sync in settings for automatic updates
-- Make sure you're using the same GitHub token on all devices
-- Note: GitHub may cache data for 5-60 seconds
+- **Pantry users**: Make sure you're using the same Pantry ID on all devices
+- **GitHub users**: Make sure you're using the same GitHub token on all devices
+- Note: There may be a slight delay (5-60 seconds) due to caching
 
 **Installation issues?**
 - Clear your browser cache
 - Try uninstalling and reinstalling
 - Make sure you're using a supported browser
 
-**Token not working?**
+**Pantry ID not working?**
+- Double-check you copied the complete ID (should look like: 12a34567-8901-2345-b678-9ce0123456e7)
+- Make sure there are no extra spaces
+- Try getting a new Pantry ID from [getpantry.cloud](https://getpantry.cloud)
+
+**GitHub token not working?**
 - Make sure the token has `gist` permission
 - Check that you copied the entire token
 - Try generating a new token

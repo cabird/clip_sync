@@ -1,34 +1,60 @@
 # Clipboard Sync
 
-A simple PWA to sync clipboard content between devices using GitHub Gists as backend.
+A simple PWA to sync clipboard content between devices using Pantry Cloud or GitHub Gists as backend.
 
 ## Setup
 
-### 1. Get a GitHub Personal Access Token
+### Option 1: Pantry Cloud (Easier - Default)
 
-1. Go to GitHub.com and sign in
-2. Click your profile picture → Settings
-3. Scroll down to "Developer settings" (at the bottom of the left sidebar)
-4. Click "Personal access tokens" → "Tokens (classic)"
-5. Click "Generate new token" → "Generate new token (classic)"
-6. Give it a name like "Clipboard Sync"
-7. Set expiration (or "No expiration" for permanent)
-8. Check ONLY the `gist` scope checkbox
-9. Click "Generate token" at the bottom
-10. **IMPORTANT**: Copy the token immediately - you won't see it again!
+1. **Get a Pantry ID (One-time only)**
+   - Go to [getpantry.cloud](https://getpantry.cloud)
+   - Enter your email address
+   - Name your pantry (anything works - like "my-clipboard" or just your name)
+   - Copy the Pantry ID you receive (looks like: 12a34567-8901-2345-b678-9ce0123456e7)
+   - **Important:** Save this ID somewhere safe - you only need to get it once, but save it in case your browser storage is cleared!
 
-### 2. Setup the App
+2. **Setup First Device**
+   - Open the app on your first device
+   - Click the settings icon (⚙️)
+   - Paste your Pantry ID
+   - Click "Save & Connect"
+   
+3. **Add Other Devices - Super Easy!**
+   - On your first device: Go to settings and click "Share as QR Code"
+   - On new device: Open the app, go to settings, and click "Scan QR Code"
+   - That's it! The Pantry ID is automatically filled in
 
-1. Open the app on both devices
-2. Enter the same token on both devices
-3. The app will automatically find or create a shared gist
+### Option 2: GitHub Gist (Original Method)
+
+1. **Get a GitHub Personal Access Token**
+   - Go to GitHub.com and sign in
+   - Click your profile picture → Settings
+   - Scroll down to "Developer settings" (at the bottom of the left sidebar)
+   - Click "Personal access tokens" → "Tokens (classic)"
+   - Click "Generate new token" → "Generate new token (classic)"
+   - Give it a name like "Clipboard Sync"
+   - Set expiration (or "No expiration" for permanent)
+   - Check ONLY the `gist` scope checkbox
+   - Click "Generate token" at the bottom
+   - **IMPORTANT**: Copy the token immediately - you won't see it again!
+
+2. **Setup the App**
+   - Open the app on both devices
+   - Click settings and change to "GitHub Gist" backend
+   - Enter the same token on both devices
+   - The app will automatically find or create a shared gist
 
 ## Features
 
-- No server needed - uses GitHub Gists
-- Works as a PWA (installable on phones)
+- No server needed - uses Pantry Cloud or GitHub Gists
+- Works as a PWA (installable on phones and desktops)
 - Stores last 20 clipboard items
 - Light theme optimized for mobile
+- Auto-sync with customizable intervals
+- Pin important items to the top
+- Delete sensitive items from history
+- QR code sharing for easy device pairing (Pantry mode)
+- Device type detection (📱 phone or 💻 computer)
 
 ## Deployment
 
