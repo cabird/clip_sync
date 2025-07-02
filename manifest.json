@@ -1,7 +1,7 @@
 {
   "name": "Clipboard Sync",
   "short_name": "ClipSync",
-  "description": "Sync clipboard between devices",
+  "description": "Sync clipboard between devices with Pantry Cloud or GitHub",
   "start_url": "/clip_sync/",
   "scope": "/clip_sync/",
   "display": "standalone",
