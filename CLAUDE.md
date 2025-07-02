@@ -13,7 +13,7 @@ Version numbering scheme:
 - **Minor** (1.X.0) - New features, significant improvements
 - **Major** (X.0.0) - Breaking changes, major refactors
 
-Current version: **v1.10.0**
+Current version: **v1.12.4**
 
 ## Project Structure
 
@@ -44,9 +44,11 @@ clip_sync/
 
 ### Technology Stack
 - Pure HTML/CSS/JavaScript (no build process)
-- GitHub Gists as backend (no server needed)
-- GitHub Personal Access Token for authentication
+- Dual backend support:
+  - Pantry Cloud (default) - simpler setup, QR code sharing
+  - GitHub Gists - original method, requires PAT
 - PWA features for mobile/desktop installation
+- External libraries: QRCode.js, ZXing (for QR scanning)
 
 ### Color Scheme
 - Light theme (changed from dark)
@@ -90,11 +92,16 @@ Users may need to:
 - Clear browser cache
 The version number helps identify cache issues.
 
-## Recent Features Added (v1.9.0 - v1.10.0)
+## Recent Features Added (v1.9.0 - v1.12.4)
 - ✅ Auto-sync with customizable intervals (15s/30s/60s)
 - ✅ Visual sync indicator in header
 - ✅ Delete button for removing sensitive items
 - ✅ Cache-busting for faster updates
+- ✅ Pantry Cloud backend support (now default!)
+- ✅ Backend selection in settings (Pantry Cloud or GitHub Gist)
+- ✅ QR code generation for sharing Pantry IDs
+- ✅ QR code scanning for easy device pairing
+- ✅ Improved error handling and user feedback
 
 ## Future Enhancements Discussed
 - Windows system tray app (Electron)

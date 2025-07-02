@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ClipSync">
     <meta name="theme-color" content="#ffffff">
     <title>Clipboard Sync</title>
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -516,7 +519,7 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.10.0</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.12.4</span>
                 <span class="sync-indicator" id="syncIndicator"></span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
@@ -576,6 +579,14 @@
             </div>
             
             <div class="form-group">
+                <label for="backendSelect">Storage Backend</label>
+                <select id="backendSelect" style="width: 100%; padding: 12px; background: #ffffff; border: 1px solid #d0d0d0; border-radius: 8px; color: #333333; font-size: 16px;" onchange="onBackendChange()">
+                    <option value="pantry">Pantry Cloud</option>
+                    <option value="github">GitHub Gist</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="githubTokenGroup">
                 <label for="githubToken">
                     GitHub Personal Access Token
                     <svg onclick="showTokenHelp()" style="cursor: pointer; width: 16px; height: 16px; vertical-align: middle; margin-left: 6px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" viewBox="0 0 24 24">
@@ -587,11 +598,34 @@
                 <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="gistIdGroup">
                 <label for="gistId">Gist ID (optional)</label>
                 <input type="text" id="gistId" placeholder="Leave empty to auto-find/create">
                 <small style="display: block; margin-top: 4px; color: #666; font-size: 12px;">
                     The app will automatically find or create your clipboard gist
+                </small>
+            </div>
+
+            <div class="form-group" id="pantryIdGroup" style="display: none;">
+                <label for="pantryId">
+                    Pantry ID
+                    <svg onclick="showPantryHelp()" style="cursor: pointer; width: 16px; height: 16px; vertical-align: middle; margin-left: 6px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="#2196F3"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="17" r="1" fill="white"/>
+                    </svg>
+                </label>
+                <input type="text" id="pantryId" placeholder="e.g., 12a34567-8901-2345-b678-9ce0123456e7">
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button type="button" class="btn btn-secondary" style="flex: 1; padding: 10px; font-size: 14px;" onclick="scanQRCode()">
+                        📷 Scan QR Code
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1; padding: 10px; font-size: 14px;" onclick="showQRCode()" id="showQRButton" disabled>
+                        🔗 Share as QR Code
+                    </button>
+                </div>
+                <small style="display: block; margin-top: 8px; color: #666; font-size: 12px;">
+                    Get your Pantry ID from <a href="https://getpantry.cloud" target="_blank" style="color: #2196F3;">getpantry.cloud</a> or scan from another device
                 </small>
             </div>
 
@@ -636,7 +670,10 @@
             </div>
 
             <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                <button class="btn btn-secondary" style="width: 100%; background: #dc3545; color: white;" onclick="resetSettings()">Reset All Settings</button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" style="flex: 1;" onclick="hideSettings()">Save & Close</button>
+                    <button class="btn btn-secondary" style="flex: 1; background: #dc3545; color: white;" onclick="resetSettings()">Reset All Settings</button>
+                </div>
             </div>
         </div>
     </div>
@@ -709,11 +746,85 @@
         </div>
     </div>
 
+    <!-- Pantry Help Modal -->
+    <div class="modal" id="pantryHelpModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>How to Get Your Pantry ID</h2>
+                <button class="close-btn" onclick="hidePantryHelp()">×</button>
+            </div>
+            
+            <div style="font-size: 14px; line-height: 1.6;">
+                <h3 style="margin-top: 16px; margin-bottom: 8px; font-size: 16px;">Quick Setup:</h3>
+                <ol style="padding-left: 20px;">
+                    <li>Go to <a href="https://getpantry.cloud" target="_blank" style="color: #2196F3;">getpantry.cloud</a></li>
+                    <li>Enter your email address</li>
+                    <li>Choose a Pantry name (anything works - we'll create a basket called "clip_sync" inside it)</li>
+                    <li>You'll receive a Pantry ID (looks like: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">12a34567-8901-2345-b678-9ce0123456e7</code>)</li>
+                    <li><strong>Important:</strong> Save this ID somewhere safe (password manager, notes, etc.)</li>
+                    <li>Copy and paste that ID here</li>
+                    <li>Use the same ID on all your devices</li>
+                </ol>
+
+                <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; margin: 16px 0;">
+                    <strong>✨ Why Pantry Cloud?</strong>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li>No GitHub account needed</li>
+                        <li>Simpler setup - just an email</li>
+                        <li>Free with generous limits</li>
+                        <li>Works exactly like GitHub storage</li>
+                    </ul>
+                </div>
+
+                <div style="background: #f0f9ff; padding: 12px; border-radius: 8px;">
+                    <strong>🔄 Sharing Between Devices:</strong>
+                    <p style="margin: 8px 0 0 0;">After setting up on one device, you can generate a QR code to easily share your Pantry ID with other devices!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div class="modal" id="qrCodeModal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h2>Share Pantry ID</h2>
+                <button class="close-btn" onclick="hideQRCode()">×</button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <div id="qrcode" style="display: flex; justify-content: center;"></div>
+                <p style="margin-top: 16px; font-size: 14px; color: #666;">
+                    Scan this QR code on another device to automatically fill in the Pantry ID
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div class="modal" id="qrScannerModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Scan QR Code</h2>
+                <button class="close-btn" onclick="stopQRScanner()">×</button>
+            </div>
+            
+            <div style="padding: 20px; text-align: center;">
+                <video id="qrVideo" style="width: 100%; max-width: 400px; border-radius: 8px;"></video>
+                <p style="margin-top: 16px; font-size: 14px; color: #666;" id="scanStatus">
+                    Point your camera at the QR code
+                </p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // App State
         let settings = {
+            backend: 'pantry', // 'github' | 'pantry'
             githubToken: '',
             gistId: '',
+            pantryId: '',
             autoSync: false,
             syncInterval: 30
         };
@@ -721,6 +832,8 @@
         let currentHistory = [];
         let syncIntervalId = null;
         let lastSyncTime = null;
+        let currentBackend = null;
+        let qrCodeScanner = null;
 
         // Device Detection
         function getDeviceType() {
@@ -733,12 +846,219 @@
             return 'laptop';
         }
 
+        // Backend Abstraction
+        class BaseBackend {
+            async testConnection() {
+                throw new Error('testConnection must be implemented');
+            }
+
+            async loadHistory() {
+                throw new Error('loadHistory must be implemented');
+            }
+
+            async saveHistory(history) {
+                throw new Error('saveHistory must be implemented');
+            }
+
+            getBackendName() {
+                throw new Error('getBackendName must be implemented');
+            }
+
+            getBackendType() {
+                throw new Error('getBackendType must be implemented');
+            }
+        }
+
+        // GitHub Backend Implementation
+        class GitHubBackend extends BaseBackend {
+            async testConnection() {
+                try {
+                    const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
+                        headers: {
+                            'Authorization': `token ${settings.githubToken}`
+                        }
+                    });
+                    return response.ok;
+                } catch (error) {
+                    console.error('GitHub connection test failed:', error);
+                    return false;
+                }
+            }
+
+            async loadHistory() {
+                const response = await fetch(`https://api.github.com/gists/${settings.gistId}?t=${Date.now()}`, {
+                    headers: {
+                        'Authorization': `token ${settings.githubToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const gist = await response.json();
+                const content = JSON.parse(gist.files['clipboard-history.json'].content);
+                return content.history || [];
+            }
+
+            async saveHistory(history) {
+                const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `token ${settings.githubToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        files: {
+                            'clipboard-history.json': {
+                                content: JSON.stringify({ history: history }, null, 2)
+                            }
+                        }
+                    })
+                });
+                return response.ok;
+            }
+
+            getBackendName() {
+                return 'GitHub Gist';
+            }
+
+            getBackendType() {
+                return 'github';
+            }
+        }
+
+        // Pantry Backend Implementation
+        class PantryBackend extends BaseBackend {
+            constructor() {
+                super();
+                this.basketVerified = false;
+            }
+
+            async testConnection() {
+                try {
+                    // Get pantry details to verify it exists
+                    const response = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}`);
+                    return response.ok;
+                } catch (error) {
+                    console.error('Pantry connection test failed:', error);
+                    return false;
+                }
+            }
+
+            async ensureBasketExists() {
+                // Only check once per session
+                if (this.basketVerified) {
+                    return true;
+                }
+
+                try {
+                    // First, check if the basket exists by getting pantry details
+                    const detailsResponse = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}`);
+                    
+                    if (!detailsResponse.ok) {
+                        throw new Error(`Invalid Pantry ID: ${detailsResponse.status}`);
+                    }
+                    
+                    const pantryDetails = await detailsResponse.json();
+                    const basketExists = pantryDetails.baskets.some(basket => basket.name === 'clip_sync');
+                    
+                    if (!basketExists) {
+                        console.log('[Pantry] Basket "clip_sync" does not exist, creating it...');
+                        // Create the basket with empty history
+                        const createResponse = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}/basket/clip_sync`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ history: [] })
+                        });
+                        
+                        if (!createResponse.ok) {
+                            throw new Error(`Failed to create basket: ${createResponse.status}`);
+                        }
+                        console.log('[Pantry] Basket created successfully');
+                    }
+                    
+                    this.basketVerified = true;
+                    return true;
+                } catch (error) {
+                    // If we get a CORS error, assume basket exists and continue
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        console.log('[Pantry] CORS error checking basket, assuming it exists');
+                        this.basketVerified = true;
+                        return true;
+                    }
+                    throw error;
+                }
+            }
+
+            async loadHistory() {
+                // Ensure basket exists before trying to load
+                await this.ensureBasketExists();
+                
+                try {
+                    const response = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}/basket/clip_sync`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    return data.history || [];
+                } catch (error) {
+                    // If CORS error, return current history (don't throw)
+                    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                        console.log('[Pantry] CORS error loading history, returning current data');
+                        return currentHistory || [];
+                    }
+                    throw error;
+                }
+            }
+
+            async saveHistory(history) {
+                // Ensure basket exists before trying to save
+                await this.ensureBasketExists();
+                
+                const response = await fetch(`https://getpantry.cloud/apiv1/pantry/${settings.pantryId}/basket/clip_sync`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ history: history })
+                });
+                return response.ok;
+            }
+
+            getBackendName() {
+                return 'Pantry Cloud';
+            }
+
+            getBackendType() {
+                return 'pantry';
+            }
+        }
+
+        // Backend factory
+        function createBackend(type) {
+            switch (type) {
+                case 'pantry':
+                    return new PantryBackend();
+                case 'github':
+                default:
+                    return new GitHubBackend();
+            }
+        }
+
         // Initialize App
         document.addEventListener('DOMContentLoaded', init);
 
         function init() {
             loadSettings();
-            if (!settings.githubToken) {
+            currentBackend = createBackend(settings.backend);
+            
+            if ((settings.backend === 'github' && !settings.githubToken) || 
+                (settings.backend === 'pantry' && !settings.pantryId)) {
                 showSettings();
                 hideLoading();
             } else {
@@ -812,23 +1132,40 @@
         }
 
         function saveSettings() {
-            const token = document.getElementById('githubToken').value.trim();
-            const gistId = document.getElementById('gistId').value.trim();
-
-            if (!token) {
-                showStatus('Please enter a GitHub token', 'error');
-                return;
-            }
-
-            settings.githubToken = token;
+            const backend = document.getElementById('backendSelect').value;
+            settings.backend = backend;
             
-            if (gistId) {
-                // User provided a specific gist ID
-                settings.gistId = gistId;
-                testConnection();
+            if (backend === 'github') {
+                const token = document.getElementById('githubToken').value.trim();
+                const gistId = document.getElementById('gistId').value.trim();
+
+                if (!token) {
+                    showStatus('Please enter a GitHub token', 'error');
+                    return;
+                }
+
+                settings.githubToken = token;
+                
+                if (gistId) {
+                    // User provided a specific gist ID
+                    settings.gistId = gistId;
+                    testConnection();
+                } else {
+                    // Auto-discover or create
+                    findOrCreateGist();
+                }
             } else {
-                // Auto-discover or create
-                findOrCreateGist();
+                // Pantry backend
+                const pantryId = document.getElementById('pantryId').value.trim();
+                
+                if (!pantryId) {
+                    showStatus('Please enter a Pantry ID', 'error');
+                    return;
+                }
+                
+                settings.pantryId = pantryId;
+                currentBackend = createBackend('pantry');
+                testPantryConnection();
             }
         }
 
@@ -905,13 +1242,10 @@
             showStatus('Testing connection...', 'info');
 
             try {
-                const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
-                    headers: {
-                        'Authorization': `token ${settings.githubToken}`
-                    }
-                });
-
-                if (!response.ok) throw new Error('Invalid gist ID or token');
+                currentBackend = createBackend('github');
+                const success = await currentBackend.testConnection();
+                
+                if (!success) throw new Error('Invalid gist ID or token');
 
                 localStorage.setItem('clipboardSyncSettings', JSON.stringify(settings));
                 showStatus('Connected successfully!', 'success');
@@ -924,27 +1258,30 @@
             }
         }
 
+        async function testPantryConnection() {
+            showStatus('Testing Pantry connection...', 'info');
+
+            try {
+                const success = await currentBackend.testConnection();
+                
+                if (!success) throw new Error('Invalid Pantry ID');
+
+                localStorage.setItem('clipboardSyncSettings', JSON.stringify(settings));
+                showStatus('Connected to Pantry successfully!', 'success');
+                setTimeout(() => {
+                    hideSettings();
+                    loadHistory();
+                }, 1500);
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+            }
+        }
+
         async function loadHistory() {
             try {
-                console.log(`[Load] Attempting to load history from gist: ${settings.gistId}`);
+                console.log(`[Load] Attempting to load history using ${currentBackend.getBackendName()}`);
                 
-                if (!settings.gistId) {
-                    throw new Error('No gist ID configured');
-                }
-                
-                const response = await fetch(`https://api.github.com/gists/${settings.gistId}?t=${Date.now()}`, {
-                    headers: {
-                        'Authorization': `token ${settings.githubToken}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const gist = await response.json();
-                const content = JSON.parse(gist.files['clipboard-history.json'].content);
-                currentHistory = content.history || [];
+                currentHistory = await currentBackend.loadHistory();
 
                 console.log(`[Load] Successfully loaded ${currentHistory.length} items`);
                 updateUI();
@@ -958,9 +1295,9 @@
                 if (error.message.includes('Failed to fetch')) {
                     showToast('Network error - check your connection');
                 } else if (error.message.includes('401')) {
-                    showToast('Invalid token - check settings');
+                    showToast('Invalid credentials - check settings');
                 } else if (error.message.includes('404')) {
-                    showToast('Gist not found - check settings');
+                    showToast('Storage not found - check settings');
                 } else {
                     showToast('Failed to load history');
                 }
@@ -979,16 +1316,11 @@
             try {
                 // First, fetch the latest history to avoid conflicts
                 console.log('[Send] Fetching latest history before sending...');
-                const getResponse = await fetch(`https://api.github.com/gists/${settings.gistId}?t=${Date.now()}`, {
-                    headers: {
-                        'Authorization': `token ${settings.githubToken}`
-                    }
-                });
-
-                if (getResponse.ok) {
-                    const gist = await getResponse.json();
-                    const latestContent = JSON.parse(gist.files['clipboard-history.json'].content);
-                    currentHistory = latestContent.history || [];
+                try {
+                    currentHistory = await currentBackend.loadHistory();
+                } catch (e) {
+                    // If we can't load, continue with current history
+                    console.log('[Send] Could not fetch latest history, continuing with local copy');
                 }
 
                 // Add to history
@@ -1009,23 +1341,10 @@
                     currentHistory = [...pinned, ...unpinned.slice(0, 20 - pinned.length)];
                 }
 
-                // Update gist
-                const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `token ${settings.githubToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        files: {
-                            'clipboard-history.json': {
-                                content: JSON.stringify({ history: currentHistory }, null, 2)
-                            }
-                        }
-                    })
-                });
-
-                if (!response.ok) throw new Error('Failed to send');
+                // Save using backend
+                const success = await currentBackend.saveHistory(currentHistory);
+                
+                if (!success) throw new Error('Failed to send');
 
                 textarea.value = '';
                 document.getElementById('pasteZone').classList.remove('has-content');
@@ -1137,9 +1456,13 @@
 
         function showSettings() {
             document.getElementById('settingsModal').classList.add('active');
+            document.getElementById('backendSelect').value = settings.backend || 'github';
             document.getElementById('githubToken').value = settings.githubToken || '';
             document.getElementById('gistId').value = settings.gistId || '';
+            document.getElementById('pantryId').value = settings.pantryId || '';
+            onBackendChange();
             updateAutoSyncUI();
+            updateQRShareButton();
         }
 
         function hideSettings() {
@@ -1152,6 +1475,31 @@
 
         function hideTokenHelp() {
             document.getElementById('tokenHelpModal').classList.remove('active');
+        }
+
+        function showPantryHelp() {
+            document.getElementById('pantryHelpModal').classList.add('active');
+        }
+
+        function hidePantryHelp() {
+            document.getElementById('pantryHelpModal').classList.remove('active');
+        }
+
+        function onBackendChange() {
+            const backend = document.getElementById('backendSelect').value;
+            const githubTokenGroup = document.getElementById('githubTokenGroup');
+            const gistIdGroup = document.getElementById('gistIdGroup');
+            const pantryIdGroup = document.getElementById('pantryIdGroup');
+            
+            if (backend === 'github') {
+                githubTokenGroup.style.display = 'block';
+                gistIdGroup.style.display = 'block';
+                pantryIdGroup.style.display = 'none';
+            } else {
+                githubTokenGroup.style.display = 'none';
+                gistIdGroup.style.display = 'none';
+                pantryIdGroup.style.display = 'block';
+            }
         }
 
         function hideLoading() {
@@ -1226,24 +1574,11 @@
             
             item.pinned = !item.pinned;
             
-            // Update the gist
+            // Update using backend
             try {
-                const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `token ${settings.githubToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        files: {
-                            'clipboard-history.json': {
-                                content: JSON.stringify({ history: currentHistory }, null, 2)
-                            }
-                        }
-                    })
-                });
-
-                if (!response.ok) throw new Error('Failed to update');
+                const success = await currentBackend.saveHistory(currentHistory);
+                
+                if (!success) throw new Error('Failed to update');
                 
                 showToast(item.pinned ? 'Pinned!' : 'Unpinned!');
                 updateUI();
@@ -1270,23 +1605,10 @@
                 // Remove from history
                 currentHistory = currentHistory.filter(h => h.id !== id);
                 
-                // Update gist
-                const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `token ${settings.githubToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        files: {
-                            'clipboard-history.json': {
-                                content: JSON.stringify({ history: currentHistory }, null, 2)
-                            }
-                        }
-                    })
-                });
-
-                if (!response.ok) throw new Error('Failed to delete');
+                // Update using backend
+                const success = await currentBackend.saveHistory(currentHistory);
+                
+                if (!success) throw new Error('Failed to delete');
                 
                 showToast('Item deleted');
                 updateUI();
@@ -1364,20 +1686,7 @@
         async function silentLoadHistory() {
             console.log(`[Auto-sync] Attempting sync at ${new Date().toLocaleTimeString()}`);
             try {
-                const response = await fetch(`https://api.github.com/gists/${settings.gistId}?t=${Date.now()}`, {
-                    headers: {
-                        'Authorization': `token ${settings.githubToken}`
-                    }
-                });
-
-                if (!response.ok) {
-                    console.error(`[Auto-sync] Failed with status: ${response.status}`);
-                    return;
-                }
-
-                const gist = await response.json();
-                const content = JSON.parse(gist.files['clipboard-history.json'].content);
-                const newHistory = content.history || [];
+                const newHistory = await currentBackend.loadHistory();
                 
                 // Check if there are new items
                 const oldLength = currentHistory.length;
@@ -1461,6 +1770,135 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // QR Code Functions
+        function updateQRShareButton() {
+            const pantryId = document.getElementById('pantryId').value.trim();
+            const showQRButton = document.getElementById('showQRButton');
+            if (showQRButton) {
+                showQRButton.disabled = !pantryId;
+            }
+        }
+
+        let qrCodeInstance = null;
+        
+        function showQRCode() {
+            const pantryId = document.getElementById('pantryId').value.trim();
+            if (!pantryId) {
+                showToast('Please enter a Pantry ID first');
+                return;
+            }
+
+            const qrData = `PANTRY:${pantryId}`;
+            
+            // Clear any existing QR code
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            
+            try {
+                // Create new QR code
+                qrCodeInstance = new QRCode(document.getElementById('qrcode'), {
+                    text: qrData,
+                    width: 256,
+                    height: 256,
+                    colorDark: '#000000',
+                    colorLight: '#FFFFFF',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                document.getElementById('qrCodeModal').classList.add('active');
+            } catch (error) {
+                console.error('QR Code generation error:', error);
+                showToast('Failed to generate QR code');
+            }
+        }
+
+        function hideQRCode() {
+            document.getElementById('qrCodeModal').classList.remove('active');
+        }
+
+        async function scanQRCode() {
+            try {
+                const modal = document.getElementById('qrScannerModal');
+                modal.classList.add('active');
+                
+                const video = document.getElementById('qrVideo');
+                const scanStatus = document.getElementById('scanStatus');
+                
+                // Create QR code scanner
+                qrCodeScanner = new ZXing.BrowserQRCodeReader();
+                
+                // Get available cameras
+                const videoInputDevices = await qrCodeScanner.listVideoInputDevices();
+                if (videoInputDevices.length === 0) {
+                    throw new Error('No camera found');
+                }
+                
+                // Use the first available camera (usually back camera on mobile)
+                const selectedDeviceId = videoInputDevices[0].deviceId;
+                
+                scanStatus.textContent = 'Starting camera...';
+                
+                // Configure scanner with hints for better performance
+                const hints = new Map();
+                hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+                
+                // Start scanning
+                qrCodeScanner.decodeFromVideoDevice(selectedDeviceId, video, (result, error) => {
+                    if (result) {
+                        const text = result.getText();
+                        console.log('QR Code scanned:', text);
+                        
+                        // Parse the QR code
+                        if (text.startsWith('PANTRY:')) {
+                            const pantryId = text.substring(7);
+                            document.getElementById('pantryId').value = pantryId;
+                            updateQRShareButton();
+                            showToast('Pantry ID scanned successfully!');
+                            stopQRScanner();
+                        } else {
+                            scanStatus.textContent = 'Invalid QR code - please scan a Pantry ID QR code';
+                        }
+                    }
+                    
+                    // Suppress common scanning errors - these are normal during continuous scanning
+                    if (error && !(error instanceof ZXing.NotFoundException)) {
+                        // Only log truly unexpected errors
+                        const errorMessage = error.message || error.toString();
+                        if (!errorMessage.includes('correctErrors') && 
+                            !errorMessage.includes('ChecksumException') &&
+                            !errorMessage.includes('Reed Solomon') &&
+                            !errorMessage.includes('decode') &&
+                            errorMessage !== 'l') {
+                            console.warn('Unexpected QR scan error:', errorMessage);
+                        }
+                    }
+                }, hints);
+                
+                scanStatus.textContent = 'Point your camera at the QR code';
+                
+            } catch (error) {
+                console.error('Failed to start QR scanner:', error);
+                showToast('Failed to start camera: ' + error.message);
+                stopQRScanner();
+            }
+        }
+
+        function stopQRScanner() {
+            if (qrCodeScanner) {
+                qrCodeScanner.reset();
+                qrCodeScanner = null;
+            }
+            document.getElementById('qrScannerModal').classList.remove('active');
+        }
+
+        // Add event listener for pantry ID input
+        document.addEventListener('DOMContentLoaded', function() {
+            const pantryIdInput = document.getElementById('pantryId');
+            if (pantryIdInput) {
+                pantryIdInput.addEventListener('input', updateQRShareButton);
+            }
+        });
     </script>
 </body>
 </html>
