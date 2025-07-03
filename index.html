@@ -161,6 +161,7 @@
             border-radius: 8px;
             margin-bottom: 12px;
             min-height: 80px;
+            white-space: pre-wrap;
             word-wrap: break-word;
             border: 1px solid #e0e0e0;
         }
@@ -526,7 +527,7 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.12.5</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.12.6</span>
                 <span class="sync-indicator" id="syncIndicator"></span>
             </div>
             <button class="settings-btn" onclick="showSettings()">⚙️</button>
@@ -1412,7 +1413,7 @@
         function updateUI() {
             if (currentHistory.length > 0) {
                 const latest = currentHistory[0];
-                document.getElementById('receivedContent').textContent = latest.content;
+                document.getElementById('receivedContent').innerHTML = escapeHtml(latest.content);
                 document.getElementById('receivedTimestamp').textContent = 
                     `${latest.device === 'phone' ? '📱' : '💻'} ${formatTime(latest.timestamp)}`;
             }
@@ -1775,7 +1776,8 @@
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
-            return div.innerHTML;
+            // Convert newlines to <br> tags for proper display
+            return div.innerHTML.replace(/\n/g, '<br>');
         }
 
         // QR Code Functions

@@ -56,7 +56,7 @@ Clip Sync now supports two storage backends:
 5. Go to [https://getpantry.cloud](https://getpantry.cloud) and enter your email
 6. Name your pantry (anything works - like "my-clipboard" or just your name)
 7. Copy the Pantry ID you receive (looks like: 12a34567-8901-2345-b678-9ce0123456e7)
-8. **Important:** Save this ID somewhere safe (password manager, notes, etc.) - you only need to get it once!
+8. **Important:** Save this ID somewhere.  If your browser storage clears or whaever, you'll need it again and pantry won't show you.  But you can always get a new pantry id and start again fresh any time.
 9. Paste it in Clip Sync and click "Save & Connect"
 
 **Adding Other Devices:**
