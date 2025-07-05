@@ -57,7 +57,7 @@
             font-weight: 600;
         }
 
-        .settings-btn {
+        .settings-btn, .share-app-btn {
             background: none;
             border: none;
             color: #333333;
@@ -527,10 +527,13 @@
         <div class="header">
             <div style="display: flex; align-items: baseline; gap: 12px;">
                 <h1>Clipboard Sync</h1>
-                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.12.6</span>
+                <span style="font-size: 12px; color: #999; font-weight: normal;">v1.13.0</span>
                 <span class="sync-indicator" id="syncIndicator"></span>
             </div>
-            <button class="settings-btn" onclick="showSettings()">⚙️</button>
+            <div style="display: flex; gap: 8px;">
+                <button class="share-app-btn" onclick="showShareApp()" title="Share Clip Sync with others">📢</button>
+                <button class="settings-btn" onclick="showSettings()">⚙️</button>
+            </div>
         </div>
 
         <div class="main-content" id="mainContent">
@@ -821,6 +824,29 @@
                 <video id="qrVideo" style="width: 100%; max-width: 400px; border-radius: 8px;"></video>
                 <p style="margin-top: 16px; font-size: 14px; color: #666;" id="scanStatus">
                     Point your camera at the QR code
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share App Modal -->
+    <div class="modal" id="shareAppModal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h2>Share Clip Sync</h2>
+                <button class="close-btn" onclick="hideShareApp()">×</button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <div id="appQRCode" style="display: flex; justify-content: center; margin-bottom: 20px;"></div>
+                <p style="margin-bottom: 16px; font-size: 16px; color: #333;">
+                    Scan to open Clip Sync on any device
+                </p>
+                <div style="background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <code style="font-size: 14px; color: #333;">https://www.cabird.com/clip_sync/</code>
+                </div>
+                <p style="font-size: 14px; color: #666;">
+                    A simple, secure clipboard syncing tool that works across all your devices
                 </p>
             </div>
         </div>
@@ -1824,6 +1850,38 @@
 
         function hideQRCode() {
             document.getElementById('qrCodeModal').classList.remove('active');
+        }
+
+        // Share App Functions
+        let appQRCodeInstance = null;
+        
+        function showShareApp() {
+            const appUrl = 'https://www.cabird.com/clip_sync/';
+            
+            // Clear any existing QR code
+            const qrContainer = document.getElementById('appQRCode');
+            qrContainer.innerHTML = '';
+            
+            try {
+                // Create new QR code for app URL
+                appQRCodeInstance = new QRCode(document.getElementById('appQRCode'), {
+                    text: appUrl,
+                    width: 256,
+                    height: 256,
+                    colorDark: '#000000',
+                    colorLight: '#FFFFFF',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                document.getElementById('shareAppModal').classList.add('active');
+            } catch (error) {
+                console.error('QR Code generation error:', error);
+                showToast('Failed to generate QR code');
+            }
+        }
+        
+        function hideShareApp() {
+            document.getElementById('shareAppModal').classList.remove('active');
         }
 
         async function scanQRCode() {
